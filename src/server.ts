@@ -93,6 +93,46 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    "list_referrers",
+    "List referrers of a container image or an OCI artifact.",
+    {
+      registry: z.string().describe("registry name"),
+      repository: z.string().describe("repository name"),
+      tag: z.string().optional().describe("tag name"),
+      digest: z.string().optional().describe("manifest digest"),
+    },
+    async ({ registry, repository, tag, digest }) => {
+      if (!registry || !repository) {
+        throw new Error("registry and repository names are required.");
+      }
+      if (!tag && !digest) {
+        throw new Error("Either tag or digest is required.");
+      }
+
+      // construct the reference string
+      let reference = `${registry}/${repository}`;
+      if (tag) {
+        reference += `:${tag}`;
+      } else if (digest) {
+        reference += `@${digest}`;
+      }
+
+      // call the ORAS CLI to list referrers
+      const command = `oras discover --format json ${reference}`;
+      const output = execSync(command, { encoding: "utf-8" });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: output,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
     "fetch_manifest",
     "Fetch manifest of a container image or an OCI artifact.",
     {
