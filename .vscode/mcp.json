@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "oras-mcp-server-stdio": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/index.js"]
+    }
+    // "oras-mcp-server-streamable-http": {
+    //   "type": "http",
+    //   "url": "http://localhost:3088/mcp"
+    // },
+  }
+}

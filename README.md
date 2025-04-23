@@ -1,2 +1,1 @@
-# oras-mcp
-ORAS MCP Server
+# ORAS MCP Server
