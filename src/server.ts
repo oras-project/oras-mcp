@@ -172,5 +172,36 @@ export function createServer(): McpServer {
     },
   );
 
+  server.tool(
+    "fetch_blob",
+    "Fetch blob referenced by a digest in a manifest.",
+    {
+      registry: z.string().describe("registry name"),
+      repository: z.string().describe("repository name"),
+      digest: z.string().describe("blob digest"),
+    },
+    async ({ registry, repository, digest }) => {
+      if (!registry || !repository || !digest) {
+        throw new Error("registry, repository, and digest are required.");
+      }
+
+      // construct the reference string
+      const reference = `${registry}/${repository}@${digest}`;
+
+      // call the ORAS CLI to fetch blob
+      const command = `oras blob fetch -o- ${reference}`;
+      const output = execSync(command, { encoding: "utf-8" });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: output,
+          },
+        ],
+      };
+    },
+  );
+
   return server;
 }
