@@ -6,6 +6,31 @@ The ORAS MCP Server can be configured to be run using the [vscode agent mode](ht
 
 Since this MCP Server requires a local ORAS CLI, please make sure you have installed the [oras](https://github.com/oras-project/oras) (version >= `v1.3.0-beta.1`).
 
+### Setup with Docker
+
+It is easier to use docker to run the ORAS MCP Server.
+
+#### Setup for VS Code
+
+Add the following code to `.vscode/mcp.json`:
+
+```json
+{
+    "servers": {
+        "oras-mcp-server": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "ghcr.io/shizhmsft/oras-mcp:main",
+            ]
+        }
+    }
+}
+```
+
 ## Example Chats
 
 Q: What platform does the image ghcr.io/oras-project/oras support?
