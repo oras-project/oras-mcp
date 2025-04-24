@@ -50,7 +50,7 @@ export function createServer(): McpServer {
 
       // parse the output to get the list of repositories
       const repositories = output.split("\n").filter((line: string) => line.trim() !== "");
-      
+
       return {
         content: [
           {
@@ -197,6 +197,58 @@ export function createServer(): McpServer {
           {
             type: "text",
             text: output,
+          },
+        ],
+      };
+    },
+  );
+
+  server.tool(
+    "parse_reference",
+    "Parse a reference string into its components of registry, repository, tag, and digest.",
+    {
+      reference: z.string().describe("reference string"),
+    },
+    async ({ reference }) => {
+      if (!reference) {
+        throw new Error("reference string is required.");
+      }
+
+      // parse the reference string
+      const components: {
+        registry: string;
+        repository: string;
+        tag?: string;
+        digest?: string;
+      } = { registry: "", repository: "" };
+
+      const atIndex = reference.indexOf("@");
+      if (atIndex !== -1) {
+        components.digest = reference.slice(atIndex + 1);
+        reference = reference.slice(0, atIndex);
+      }
+
+      const colonIndex = reference.indexOf(":");
+      if (colonIndex !== -1) {
+        components.tag = reference.slice(colonIndex + 1);
+        reference = reference.slice(0, colonIndex);
+      }
+      const slashIndex = reference.indexOf("/");
+      if (slashIndex === -1) {
+        throw new Error("Invalid reference string format.");
+      }
+      components.registry = reference.slice(0, slashIndex);
+      components.repository = reference.slice(slashIndex + 1);
+
+      if (components.registry === "" || components.repository === "") {
+        throw new Error("Invalid reference string format.");
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(components, null, 2),
           },
         ],
       };
