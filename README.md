@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/shizhmsft-oras-mcp-badge.png)](https://mseep.ai/app/shizhmsft-oras-mcp)
+
 # ORAS MCP Server
 
 ## Usage
