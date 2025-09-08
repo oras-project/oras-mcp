@@ -24,7 +24,8 @@ Add the following code to `.vscode/mcp.json`:
                 "run",
                 "--rm",
                 "-i",
-                "ghcr.io/shizhmsft/oras-mcp:main",
+                "ghcr.io/oras-project/oras-mcp:main",
+                "serve"
             ]
         }
     }
