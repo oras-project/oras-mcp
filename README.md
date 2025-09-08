@@ -49,7 +49,3 @@ Let me know if you need further details!
 Q: What's the latest Azure Linux 3.0 image in MCR? Does it have a signature? What's the type of it?
 
 A: The latest Azure Linux 3.0 image in the Microsoft Container Registry (MCR) is tagged as `3.0.20250402`. It has a signature, and the type of the signature is `application/vnd.cncf.notary.signature`.
-
-## Acknowledgement
-
-The ORAS MCP Server repository was initiated using the [Yeoman Generator for MCP Server](https://www.npmjs.com/package/generator-mcp).
