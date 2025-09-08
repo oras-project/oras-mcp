@@ -47,7 +47,14 @@ func runServe(cmd *cobra.Command) error {
 		Version: version.GetVersion(),
 	}, nil)
 
+	// Register all tools
+	mcp.AddTool(server, tool.MetadataListWellknownRegistries, tool.ListWellknownRegistries)
+	mcp.AddTool(server, tool.MetadataListRepositories, tool.ListRepositories)
 	mcp.AddTool(server, tool.MetadataListTags, tool.ListTags)
+	mcp.AddTool(server, tool.MetadataListReferrers, tool.ListReferrers)
+	mcp.AddTool(server, tool.MetadataFetchManifest, tool.FetchManifest)
+	mcp.AddTool(server, tool.MetadataFetchBlob, tool.FetchBlob)
+	mcp.AddTool(server, tool.MetadataParseReference, tool.ParseReference)
 
 	return server.Run(cmd.Context(), &mcp.StdioTransport{})
 }

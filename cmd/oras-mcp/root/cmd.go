@@ -17,6 +17,7 @@ package root
 
 import "github.com/spf13/cobra"
 
+// New creates the root command for oras-mcp.
 func New() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "oras-mcp [command]",
