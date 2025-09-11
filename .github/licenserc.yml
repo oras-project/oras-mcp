@@ -38,7 +38,7 @@ header:
     - 'go.work'
     - '**/testdata/**'
     - '**/*.svg'
-    - '**/*.json'
+    - '.vscode/mcp.json'
 
   comment: on-failure
 
