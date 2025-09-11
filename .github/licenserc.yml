@@ -38,6 +38,7 @@ header:
     - 'go.work'
     - '**/testdata/**'
     - '**/*.svg'
+    - '**/*.json'
 
   comment: on-failure
 
