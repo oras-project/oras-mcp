@@ -3,7 +3,7 @@ module github.com/oras-project/oras-mcp
 go 1.25.0
 
 require (
-	github.com/modelcontextprotocol/go-sdk v0.5.0
+	github.com/modelcontextprotocol/go-sdk v0.6.0
 	github.com/spf13/cobra v1.10.1
 )
 
