@@ -56,7 +56,7 @@ func TestNewRepository(t *testing.T) {
 			name:      "valid reference",
 			reference: host + ":" + port + "/test-repo",
 			checkFields: func(t *testing.T, repo *remote.Repository) {
-				if repo.PlainHTTP != false { // PlainHTTP should be false for non-localhost hosts, even if using HTTP
+				if repo.PlainHTTP { // PlainHTTP should be false for non-localhost hosts, even if using HTTP
 					t.Errorf("Expected PlainHTTP to be false for non-localhost host")
 				}
 				if repo.Client != DefaultClient {
