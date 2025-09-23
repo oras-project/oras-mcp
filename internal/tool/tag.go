@@ -17,10 +17,10 @@ package tool
 
 import (
 	"context"
-	"os/exec"
-	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/oras-project/oras-mcp/internal/remote"
+	"oras.land/oras-go/v2/registry"
 )
 
 // MetadataListTags describes the ListTags tool.
@@ -42,24 +42,24 @@ type OutputListTags struct {
 
 // ListTags lists tags in a repository of a container registry.
 func ListTags(ctx context.Context, _ *mcp.CallToolRequest, input InputListTags) (*mcp.CallToolResult, OutputListTags, error) {
-	// list tags using oras CLI
-	cmd := exec.CommandContext(ctx, "oras", "repo", "tags", input.Registry+"/"+input.Repository)
-	result, err := cmd.Output()
-	if err != nil {
+	// validate input
+	ref := registry.Reference{
+		Registry:   input.Registry,
+		Repository: input.Repository,
+	}
+	if err := ref.Validate(); err != nil {
 		return nil, OutputListTags{}, err
 	}
+	repo := remote.NewRepository(ref)
 
-	// parse output
-	tags := []string{}
-	for line := range strings.SplitSeq(string(result), "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			tags = append(tags, line)
-		}
+	// list tags
+	tags, err := registry.Tags(ctx, repo)
+	if err != nil {
+		return nil, OutputListTags{}, err
 	}
 
 	output := OutputListTags{
 		Tags: tags,
 	}
-
 	return nil, output, nil
 }
