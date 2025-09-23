@@ -20,13 +20,21 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"testing"
 )
 
 // getLocalhostServerURL extracts the port from a test server URL and returns a localhost URL
 func getLocalhostServerURL(serverURL string) string {
-	_, port, _ := net.SplitHostPort(serverURL[7:]) // Split the host:port
+	u, err := url.Parse(serverURL)
+	if err != nil {
+		panic("invalid server URL: " + err.Error())
+	}
+	_, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		panic("invalid host:port in server URL: " + err.Error())
+	}
 	return "localhost:" + port
 }
 

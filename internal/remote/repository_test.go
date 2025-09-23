@@ -19,6 +19,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/oras-project/oras-mcp/internal/version"
@@ -37,9 +38,13 @@ func TestNewRepository(t *testing.T) {
 	defer ts.Close()
 
 	// Parse the host and port from the test server URL
-	host, port, err := net.SplitHostPort(ts.URL[7:]) // Remove http:// prefix
+	u, err := url.Parse(ts.URL)
 	if err != nil {
 		t.Fatalf("Failed to parse test server URL: %v", err)
+	}
+	host, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		t.Fatalf("Failed to parse test server host: %v", err)
 	}
 
 	tests := []struct {
@@ -51,7 +56,7 @@ func TestNewRepository(t *testing.T) {
 			name:      "valid reference",
 			reference: host + ":" + port + "/test-repo",
 			checkFields: func(t *testing.T, repo *remote.Repository) {
-				if repo.PlainHTTP != false { // Test server is HTTP but not localhost
+				if repo.PlainHTTP != false { // PlainHTTP should be false for non-localhost hosts, even if using HTTP
 					t.Errorf("Expected PlainHTTP to be false for non-localhost host")
 				}
 				if repo.Client != DefaultClient {
