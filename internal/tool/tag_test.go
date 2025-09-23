@@ -45,9 +45,8 @@ func TestListTags_ValidInput(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Extract port from test server URL and use localhost instead of IP address
-	_, port, _ := net.SplitHostPort(ts.URL[7:]) // Split the host:port
-	serverURL := "localhost:" + port
+	// Get localhost server URL
+	serverURL := getLocalhostServerURL(ts.URL)
 
 	// Create test context and input
 	ctx := context.Background()
@@ -228,9 +227,10 @@ func TestListTags_EmptyTagList(t *testing.T) {
 func TestListTags_RepositoryNotFound(t *testing.T) {
 	// Setup a test server that simulates a repository not found error
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet || r.URL.Path != "/v2/test-repo/tags/list" {
+		if r.Method == http.MethodGet && r.URL.Path == "/v2/test-repo/tags/list" {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(`{"errors":[{"code":"NAME_UNKNOWN","message":"Repository not found"}]}`))
+			return
 		}
 	}))
 	defer ts.Close()
