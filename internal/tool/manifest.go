@@ -19,9 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/oras-project/oras-mcp/internal/remote"
+	"oras.land/oras-go/v2/content"
+	"oras.land/oras-go/v2/registry"
 )
 
 // MetadataFetchManifest describes the FetchManifest tool.
@@ -45,31 +47,41 @@ type OutputFetchManifest struct {
 
 // FetchManifest fetches manifest of a container image or an OCI artifact.
 func FetchManifest(ctx context.Context, _ *mcp.CallToolRequest, input InputFetchManifest) (*mcp.CallToolResult, OutputFetchManifest, error) {
+	// validate input
 	if input.Registry == "" || input.Repository == "" {
 		return nil, OutputFetchManifest{}, fmt.Errorf("registry and repository names are required")
 	}
 	if input.Tag == "" && input.Digest == "" {
 		return nil, OutputFetchManifest{}, fmt.Errorf("either tag or digest is required")
 	}
-
-	// construct the reference string
-	reference := fmt.Sprintf("%s/%s", input.Registry, input.Repository)
-	if input.Tag != "" {
-		reference += ":" + input.Tag
-	} else if input.Digest != "" {
-		reference += "@" + input.Digest
+	ref := registry.Reference{
+		Registry:   input.Registry,
+		Repository: input.Repository,
+		Reference:  input.Tag,
 	}
+	if input.Digest != "" {
+		ref.Reference = input.Digest
+	}
+	if err := ref.Validate(); err != nil {
+		return nil, OutputFetchManifest{}, err
+	}
+	repo := remote.NewRepository(ref)
 
-	// fetch manifest using oras CLI
-	cmd := exec.CommandContext(ctx, "oras", "manifest", "fetch", "--format", "json", reference)
-	result, err := cmd.Output()
+	// fetch the manifest
+	desc, rc, err := repo.FetchReference(ctx, ref.Reference)
+	if err != nil {
+		return nil, OutputFetchManifest{}, err
+	}
+	defer rc.Close()
+
+	manifestBytes, err := content.ReadAll(rc, desc)
 	if err != nil {
 		return nil, OutputFetchManifest{}, err
 	}
 
+	// output direct as manifests are already in JSON
 	output := OutputFetchManifest{
-		Data: json.RawMessage(result),
+		Data: json.RawMessage(manifestBytes),
 	}
-
 	return nil, output, nil
 }
