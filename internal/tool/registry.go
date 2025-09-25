@@ -55,6 +55,5 @@ func ListWellknownRegistries(ctx context.Context, _ *mcp.CallToolRequest, _ Inpu
 	output := OutputListWellknownRegistries{
 		Registries: registries,
 	}
-
 	return nil, output, nil
 }
