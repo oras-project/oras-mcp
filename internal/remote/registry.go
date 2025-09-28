@@ -15,17 +15,17 @@ limitations under the License.
 
 package remote
 
-import (
-	"oras.land/oras-go/v2/registry"
-	"oras.land/oras-go/v2/registry/remote"
-)
+import "oras.land/oras-go/v2/registry/remote"
 
-// NewRepository assembles an oras-mcp remote repository.
-func NewRepository(ref registry.Reference) *remote.Repository {
-	return &remote.Repository{
-		Client:          DefaultClient,
-		Reference:       ref,
-		PlainHTTP:       isPlainHttp(ref.Registry),
-		SkipReferrersGC: true,
+// NewRegistry assembles an oras-mcp remote registry client.
+func NewRegistry(name string) (*remote.Registry, error) {
+	reg, err := remote.NewRegistry(name)
+	if err != nil {
+		return nil, err
 	}
+
+	reg.Client = DefaultClient
+	reg.PlainHTTP = isPlainHttp(name)
+
+	return reg, nil
 }
