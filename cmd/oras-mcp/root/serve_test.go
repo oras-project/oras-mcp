@@ -82,12 +82,8 @@ func TestRunServeReturnsErrorOnCanceledContext(t *testing.T) {
 
 	tempDir := t.TempDir()
 
-	// The MCP stdio transport expects real OS file descriptors (it calls
-	// syscalls such as Fd()), so we redirect stdout/stderr to temporary files
-	// instead of using in-memory buffers. The files keep the transport happy
-	// while still letting us inspect output after the server returns. We could
-	// also use additional pipes here, but temp files are perfectly adequate
-	// and keep the test simple.
+	// MCP stdio transport requires real file descriptors, so we use temp files
+	// instead of in-memory buffers.
 	stdoutFile, err := os.CreateTemp(tempDir, "stdout")
 	if err != nil {
 		t.Fatalf("failed to create stdout file: %v", err)
