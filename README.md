@@ -32,14 +32,62 @@ Add the following code to `.vscode/mcp.json`:
 }
 ```
 
+##### Mount Docker credentials (Linux only)
+
+Linux users can share `docker login` credentials by mounting the config file:
+
+```json
+{
+    "servers": {
+        "oras-mcp-server": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "-v",
+                "${env:HOME}/.docker/config.json:/root/.docker/config.json:ro",
+                "ghcr.io/oras-project/oras-mcp:main",
+                "serve"
+            ]
+        }
+    }
+}
+```
+
+Adjust the path if you keep credentials under `${env:DOCKER_CONFIG}`. The container understands only inline `auths` entries; helper-based configs (`credsStore`, `credHelpers`) won't work. On macOS/Windows, install the [released binary](#setup-from-released-binaries) instead.
+
+### Setup from Released Binaries
+
+1. Visit the [GitHub releases page](https://github.com/oras-project/oras-mcp/releases) and download the archive that matches your operating system and CPU architecture (`oras-mcp_<version>_<os>_<arch>.tar.gz` for Linux or macOS, `oras-mcp_<version>_windows_<arch>.zip` for Windows).
+2. Extract the archive; the folder contains a single executable named `oras-mcp` (or `oras-mcp.exe` on Windows) and a copy of the project license.
+3. Move the binary to a directory on your `PATH` (for example, `/usr/local/bin` on Linux/macOS or `%LOCALAPPDATA%\Programs\oras-mcp` on Windows) or reference it directly from its extracted location.
+4. Run `oras-mcp serve --help` (or `oras-mcp.exe serve --help`) to confirm the binary works on your system.
+5. To integrate with VS Code agent mode, update `.vscode/mcp.json` to point at the extracted binary:
+
+   ```json
+   {
+       "servers": {
+           "oras-mcp-server": {
+               "type": "stdio",
+               "command": "/absolute/path/to/oras-mcp",
+               "args": [
+                   "serve"
+               ]
+           }
+       }
+   }
+   ```
+
+   On Windows, set `"command": "C:/path/to/oras-mcp.exe"`.
+
 ### Authentication
 
-If you need to access private registries through the server, log in ahead of time using either the ORAS CLI or Docker:
+`oras-mcp` reads credentials from the same stores used by the ORAS and Docker CLIs, but you need to expose those stores to the server process:
 
-- `oras login <registry>`
-- `docker login <registry>`
-
-The server will reuse the credentials from your local credential store when available.
+- **Released binary** – Run `oras login <registry>` or `docker login <registry>` on the host machine; the binary will pick up the cached credentials automatically.
+- **Docker container** – On Linux you can mount your Docker config as shown in the [credential section](#mount-docker-credentials-linux-only); ensure the file contains inline `auths` entries. Docker Desktop (macOS/Windows) depends on keychain helpers, so use the released binary there.
 
 ## Example Chats
 
@@ -58,3 +106,7 @@ Let me know if you need further details!
 Q: What's the latest Azure Linux 3.0 image in MCR? Does it have a signature? What's the type of it?
 
 A: The latest Azure Linux 3.0 image in the Microsoft Container Registry (MCR) is tagged as `3.0.20250402`. It has a signature, and the type of the signature is `application/vnd.cncf.notary.signature`.
+
+## Release Process
+
+Maintainers can find the full release steps in the [release checklist](./RELEASE_CHECKLIST.md).
