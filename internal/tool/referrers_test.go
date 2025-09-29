@@ -25,10 +25,36 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/opencontainers/go-digest"
 	specs "github.com/opencontainers/image-spec/specs-go"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
+
+func TestListReferrers_OutputSchema(t *testing.T) {
+	rawSchema := MetadataListReferrers.OutputSchema
+	if rawSchema == nil {
+		t.Fatal("OutputSchema is nil")
+	}
+
+	schema, ok := rawSchema.(*jsonschema.Schema)
+	if !ok {
+		t.Fatalf("OutputSchema has unexpected type %T", rawSchema)
+	}
+
+	if schema.Type != "object" {
+		t.Fatalf("unexpected schema type: got %q, want %q", schema.Type, "object")
+	}
+	if schema.Description != "Referrers of the requested artifact in JSON format." {
+		t.Fatalf("unexpected schema description: got %q", schema.Description)
+	}
+	if schema.AdditionalProperties == nil {
+		t.Fatal("AdditionalProperties is nil")
+	}
+	if schema.AdditionalProperties.Type != "" || schema.AdditionalProperties.Description != "" {
+		t.Fatalf("AdditionalProperties should be unconstrained, got %+v", schema.AdditionalProperties)
+	}
+}
 
 func TestListReferrers_InvalidInput(t *testing.T) {
 	testCases := []struct {
@@ -84,8 +110,8 @@ func TestListReferrers_InvalidInput(t *testing.T) {
 			if result != nil {
 				t.Fatalf("expected MCP result to be nil, got %v", result)
 			}
-			if len(output.Data) != 0 {
-				t.Fatalf("expected empty output on error, got data %s", string(output.Data))
+			if len(output.Raw()) != 0 {
+				t.Fatalf("expected empty output on error, got data %s", string(output.Raw()))
 			}
 		})
 	}
@@ -111,8 +137,8 @@ func TestListReferrers_ResolveError(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got data %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got data %s", string(output.Raw()))
 	}
 }
 
@@ -153,8 +179,8 @@ func TestListReferrers_ReferrersError(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got data %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got data %s", string(output.Raw()))
 	}
 }
 
@@ -260,12 +286,12 @@ func TestListReferrers_Success(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) == 0 {
+	if len(output.Raw()) == 0 {
 		t.Fatal("expected referrers data, got empty message")
 	}
 
 	var root ListReferrersNode
-	if err := json.Unmarshal(output.Data, &root); err != nil {
+	if err := json.Unmarshal(output.Raw(), &root); err != nil {
 		t.Fatalf("failed to unmarshal root: %v", err)
 	}
 

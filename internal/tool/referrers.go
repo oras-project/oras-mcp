@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -32,6 +33,11 @@ import (
 var MetadataListReferrers = &mcp.Tool{
 	Name:        "list_referrers",
 	Description: "List referrers of a container image or an OCI artifact.",
+	OutputSchema: &jsonschema.Schema{
+		Type:                 "object",
+		AdditionalProperties: &jsonschema.Schema{},
+		Description:          "Referrers of the requested artifact in JSON format.",
+	},
 }
 
 // InputListReferrers is the input for the ListReferrers tool.
@@ -48,7 +54,21 @@ type InputListReferrers struct {
 // MCP Go SDK rejects cyclic schemas. Referrers form a recursive tree, so we
 // pre-marshal it and inline the JSON to keep the schema acyclic.
 type OutputListReferrers struct {
-	Data json.RawMessage `json:",inline" jsonschema:"referrers of the requested artifact"`
+	tree json.RawMessage
+}
+
+// MarshalJSON emits the pre-marshalled referrers tree directly so the response
+// mirrors the original structure without additional wrapping fields.
+func (o OutputListReferrers) MarshalJSON() ([]byte, error) {
+	if len(o.tree) == 0 {
+		return []byte("null"), nil
+	}
+	return o.tree, nil
+}
+
+// Raw returns the JSON-encoded referrers tree.
+func (o OutputListReferrers) Raw() []byte {
+	return o.tree
 }
 
 type ListReferrersNode struct {
@@ -97,7 +117,7 @@ func ListReferrers(ctx context.Context, _ *mcp.CallToolRequest, input InputListR
 	rootJSON, _ := json.Marshal(root)
 
 	output := OutputListReferrers{
-		Data: json.RawMessage(rootJSON),
+		tree: json.RawMessage(rootJSON),
 	}
 	return nil, output, nil
 }
