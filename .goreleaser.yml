@@ -59,12 +59,14 @@ builds:
   mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - format: tar.gz
+  - formats:
+    - tar.gz
     files:
     - LICENSE
     format_overrides:
     - goos: windows
-      format: zip
+      formats:
+      - zip
 
 release:
   draft: true
