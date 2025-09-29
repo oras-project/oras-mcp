@@ -32,6 +32,30 @@ Add the following code to `.vscode/mcp.json`:
 }
 ```
 
+### Setup from Released Binaries
+
+1. Visit the [GitHub releases page](https://github.com/oras-project/oras-mcp/releases) and download the archive that matches your operating system and CPU architecture (`oras-mcp_<version>_<os>_<arch>.tar.gz` for Linux or macOS, `oras-mcp_<version>_windows_<arch>.zip` for Windows).
+2. Extract the archive; the folder contains a single executable named `oras-mcp` (or `oras-mcp.exe` on Windows) and a copy of the project license.
+3. Move the binary to a directory on your `PATH` (for example, `/usr/local/bin` on Linux/macOS or `%LOCALAPPDATA%\Programs\oras-mcp` on Windows) or reference it directly from its extracted location.
+4. Run `oras-mcp serve --help` (or `oras-mcp.exe serve --help`) to confirm the binary works on your system.
+5. To integrate with VS Code agent mode, update `.vscode/mcp.json` to point at the extracted binary:
+
+   ```json
+   {
+       "servers": {
+           "oras-mcp-server": {
+               "type": "stdio",
+               "command": "/absolute/path/to/oras-mcp",
+               "args": [
+                   "serve"
+               ]
+           }
+       }
+   }
+   ```
+
+   On Windows, set `"command": "C:/path/to/oras-mcp.exe"`.
+
 ### Authentication
 
 If you need to access private registries through the server, log in ahead of time using either the ORAS CLI or Docker:
