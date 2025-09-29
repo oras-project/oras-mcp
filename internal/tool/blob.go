@@ -26,7 +26,7 @@ import (
 	"oras.land/oras-go/v2/registry"
 )
 
-// maxBlobSize defines the max blob can be fetched.
+// maxBlobSize defines the maximum blob size that can be fetched.
 const maxBlobSize = 4 * 1024 * 1024 // 4 MiB
 
 // MetadataFetchBlob describes the FetchBlob tool.
