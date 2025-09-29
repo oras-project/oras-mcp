@@ -26,9 +26,35 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/opencontainers/go-digest"
 	"oras.land/oras-go/v2/content"
 )
+
+func TestFetchBlob_OutputSchema(t *testing.T) {
+	rawSchema := MetadataFetchBlob.OutputSchema
+	if rawSchema == nil {
+		t.Fatal("OutputSchema is nil")
+	}
+
+	schema, ok := rawSchema.(*jsonschema.Schema)
+	if !ok {
+		t.Fatalf("OutputSchema has unexpected type %T", rawSchema)
+	}
+
+	if schema.Type != "object" {
+		t.Fatalf("unexpected schema type: got %q, want %q", schema.Type, "object")
+	}
+	if schema.Description != "Blob data in JSON format." {
+		t.Fatalf("unexpected schema description: got %q", schema.Description)
+	}
+	if schema.AdditionalProperties == nil {
+		t.Fatal("AdditionalProperties is nil")
+	}
+	if schema.AdditionalProperties.Type != "" || schema.AdditionalProperties.Description != "" {
+		t.Fatalf("AdditionalProperties should be unconstrained, got %+v", schema.AdditionalProperties)
+	}
+}
 
 func TestFetchBlob_Success(t *testing.T) {
 	blob := []byte(`{"hello":"world"}`)
@@ -75,8 +101,8 @@ func TestFetchBlob_Success(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if !bytes.Equal(output.Data, blob) {
-		t.Fatalf("unexpected blob data: got %s, want %s", string(output.Data), string(blob))
+	if !bytes.Equal(output.Raw(), blob) {
+		t.Fatalf("unexpected blob data: got %s, want %s", string(output.Raw()), string(blob))
 	}
 }
 
@@ -126,8 +152,8 @@ func TestFetchBlob_InvalidInput(t *testing.T) {
 			if result != nil {
 				t.Fatalf("expected MCP result to be nil, got %v", result)
 			}
-			if len(output.Data) != 0 {
-				t.Fatalf("expected empty output on error, got %s", string(output.Data))
+			if len(output.Raw()) != 0 {
+				t.Fatalf("expected empty output on error, got %s", string(output.Raw()))
 			}
 		})
 	}
@@ -153,8 +179,8 @@ func TestFetchBlob_RemoteError(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got %s", string(output.Raw()))
 	}
 }
 
@@ -202,8 +228,8 @@ func TestFetchBlob_NonJSONBlob(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got %s", string(output.Raw()))
 	}
 }
 
@@ -253,8 +279,8 @@ func TestFetchBlob_BlobTooLarge(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got %s", string(output.Raw()))
 	}
 }
 
@@ -309,7 +335,7 @@ func TestFetchBlob_DigestMismatch(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if len(output.Data) != 0 {
-		t.Fatalf("expected empty output on error, got %s", string(output.Data))
+	if len(output.Raw()) != 0 {
+		t.Fatalf("expected empty output on error, got %s", string(output.Raw()))
 	}
 }

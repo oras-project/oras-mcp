@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/oras-project/oras-mcp/internal/remote"
 	"oras.land/oras-go/v2/content"
@@ -33,6 +34,11 @@ const maxBlobSize = 4 * 1024 * 1024 // 4 MiB
 var MetadataFetchBlob = &mcp.Tool{
 	Name:        "fetch_blob",
 	Description: "Fetch blob referenced by a digest in a manifest.",
+	OutputSchema: &jsonschema.Schema{
+		Type:                 "object",
+		AdditionalProperties: &jsonschema.Schema{},
+		Description:          "Blob data in JSON format.",
+	},
 }
 
 // InputFetchBlob is the input for the FetchBlob tool.
@@ -44,7 +50,21 @@ type InputFetchBlob struct {
 
 // OutputFetchBlob is the output for the FetchBlob tool.
 type OutputFetchBlob struct {
-	Data json.RawMessage `json:",inline" jsonschema:"blob data in JSON format"`
+	blob json.RawMessage
+}
+
+// MarshalJSON ensures the tool response is the raw blob document without extra
+// wrapping fields so agents receive the exact JSON payload fetched.
+func (o OutputFetchBlob) MarshalJSON() ([]byte, error) {
+	if len(o.blob) == 0 {
+		return []byte("null"), nil
+	}
+	return o.blob, nil
+}
+
+// Raw returns the underlying blob bytes.
+func (o OutputFetchBlob) Raw() []byte {
+	return o.blob
 }
 
 // FetchBlob fetches blob referenced by a digest in a manifest.
@@ -90,7 +110,7 @@ func FetchBlob(ctx context.Context, _ *mcp.CallToolRequest, input InputFetchBlob
 
 	// Create the output
 	output := OutputFetchBlob{
-		Data: json.RawMessage(blobBytes),
+		blob: json.RawMessage(blobBytes),
 	}
 	return nil, output, nil
 }
