@@ -43,3 +43,9 @@ jobs:
         run: make test
       - name: Check Version
         run: bin/linux/amd64/oras-mcp version
+      - name: Upload coverage to codecov.io
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          fail_ci_if_error: true
