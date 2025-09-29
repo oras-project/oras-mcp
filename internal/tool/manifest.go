@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/oras-project/oras-mcp/internal/remote"
 	"oras.land/oras-go/v2/content"
@@ -30,6 +31,11 @@ import (
 var MetadataFetchManifest = &mcp.Tool{
 	Name:        "fetch_manifest",
 	Description: "Fetch manifest of a container image or an OCI artifact.",
+	OutputSchema: &jsonschema.Schema{
+		Type:                 "object",
+		AdditionalProperties: &jsonschema.Schema{},
+		Description:          "Manifest data in JSON format.",
+	},
 }
 
 // InputFetchManifest is the input for the FetchManifest tool.
@@ -42,7 +48,22 @@ type InputFetchManifest struct {
 
 // OutputFetchManifest is the output for the FetchManifest tool.
 type OutputFetchManifest struct {
-	Data json.RawMessage `json:",inline" jsonschema:"manifest data in JSON format"`
+	manifest json.RawMessage
+}
+
+// MarshalJSON implements json.Marshaler and emits the raw manifest payload
+// without any additional wrapping so the response matches the manifest
+// document exactly.
+func (o OutputFetchManifest) MarshalJSON() ([]byte, error) {
+	if len(o.manifest) == 0 {
+		return []byte("null"), nil
+	}
+	return o.manifest, nil
+}
+
+// Raw returns the manifest bytes.
+func (o OutputFetchManifest) Raw() []byte {
+	return o.manifest
 }
 
 // FetchManifest fetches manifest of a container image or an OCI artifact.
@@ -81,7 +102,7 @@ func FetchManifest(ctx context.Context, _ *mcp.CallToolRequest, input InputFetch
 
 	// output direct as manifests are already in JSON
 	output := OutputFetchManifest{
-		Data: json.RawMessage(manifestBytes),
+		manifest: json.RawMessage(manifestBytes),
 	}
 	return nil, output, nil
 }
