@@ -18,10 +18,12 @@ package tool
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/opencontainers/go-digest"
@@ -225,6 +227,9 @@ func TestFetchBlob_BlobTooLarge(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		if r.Method == http.MethodGet {
 			if _, err := w.Write(blob); err != nil {
+				if errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) {
+					return
+				}
 				t.Fatalf("failed to write blob: %v", err)
 			}
 		}
