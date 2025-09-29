@@ -2,9 +2,9 @@
 
 ## Usage
 
-The ORAS MCP Server can be configured to be run using the [vscode agent mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode).
+Configure the ORAS MCP Server to run inside [VS Code agent mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) for registry-aware chats.
 
-Since this MCP Server requires a local ORAS CLI, please make sure you have installed the [oras](https://github.com/oras-project/oras) (version >= `v1.3.0-beta.1`).
+The server is implemented with the [`oras-go`](https://github.com/oras-project/oras-go) library and does not depend on the [`oras`](https://github.com/oras-project/oras) CLI.
 
 ### Setup with Docker
 
@@ -31,6 +31,15 @@ Add the following code to `.vscode/mcp.json`:
     }
 }
 ```
+
+### Authentication
+
+If you need to access private registries through the server, log in ahead of time using either the ORAS CLI or Docker:
+
+- `oras login <registry>`
+- `docker login <registry>`
+
+The server will reuse the credentials from your local credential store when available.
 
 ## Example Chats
 
