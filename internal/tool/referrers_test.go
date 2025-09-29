@@ -16,6 +16,7 @@ limitations under the License.
 package tool
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -53,6 +54,28 @@ func TestListReferrers_OutputSchema(t *testing.T) {
 	}
 	if schema.AdditionalProperties.Type != "" || schema.AdditionalProperties.Description != "" {
 		t.Fatalf("AdditionalProperties should be unconstrained, got %+v", schema.AdditionalProperties)
+	}
+}
+
+func TestOutputListReferrers_MarshalJSON(t *testing.T) {
+	tree := []byte("{\"digest\":\"sha256:abc\",\"referrers\":[]}")
+	output := OutputListReferrers{tree: json.RawMessage(tree)}
+
+	got, err := json.Marshal(output)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if !bytes.Equal(got, tree) {
+		t.Fatalf("unexpected marshal output: got %s, want %s", string(got), string(tree))
+	}
+
+	var zero OutputListReferrers
+	got, err = json.Marshal(zero)
+	if err != nil {
+		t.Fatalf("json.Marshal() zero error = %v", err)
+	}
+	if string(got) != "null" {
+		t.Fatalf("unexpected zero marshal output: got %s, want null", string(got))
 	}
 }
 

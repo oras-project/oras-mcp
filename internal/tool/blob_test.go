@@ -18,6 +18,7 @@ package tool
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -53,6 +54,28 @@ func TestFetchBlob_OutputSchema(t *testing.T) {
 	}
 	if schema.AdditionalProperties.Type != "" || schema.AdditionalProperties.Description != "" {
 		t.Fatalf("AdditionalProperties should be unconstrained, got %+v", schema.AdditionalProperties)
+	}
+}
+
+func TestOutputFetchBlob_MarshalJSON(t *testing.T) {
+	blob := []byte(`{"key":"value"}`)
+	output := OutputFetchBlob{blob: json.RawMessage(blob)}
+
+	got, err := json.Marshal(output)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if !bytes.Equal(got, blob) {
+		t.Fatalf("unexpected marshal output: got %s, want %s", string(got), string(blob))
+	}
+
+	var zero OutputFetchBlob
+	got, err = json.Marshal(zero)
+	if err != nil {
+		t.Fatalf("json.Marshal() zero error = %v", err)
+	}
+	if string(got) != "null" {
+		t.Fatalf("unexpected zero marshal output: got %s, want null", string(got))
 	}
 }
 
