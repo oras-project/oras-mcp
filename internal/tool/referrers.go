@@ -92,10 +92,9 @@ func ListReferrers(ctx context.Context, _ *mcp.CallToolRequest, input InputListR
 		return nil, OutputListReferrers{}, err
 	}
 
-	rootJSON, err := json.Marshal(root)
-	if err != nil {
-		return nil, OutputListReferrers{}, err
-	}
+	// json.Marshal on ListReferrersNode never fails because the structure only
+	// contains JSON-serializable fields; safe to ignore the error.
+	rootJSON, _ := json.Marshal(root)
 
 	output := OutputListReferrers{
 		Data: json.RawMessage(rootJSON),
