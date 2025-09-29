@@ -1,5 +1,12 @@
 # ORAS MCP Server
 
+[![Build Status](https://github.com/oras-project/oras-mcp/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/oras-project/oras-mcp/actions/workflows/build.yml?query=workflow%3Abuild+event%3Apush)
+[![codecov](https://codecov.io/gh/oras-project/oras-mcp/branch/main/graph/badge.svg)](https://codecov.io/gh/oras-project/oras-mcp)
+
+<p style="text-align: left;">
+<a href="https://oras.land/"><img src="https://oras.land/img/oras.svg" alt="banner" width="100px"></a>
+</p>
+
 ## Usage
 
 Configure the ORAS MCP Server to run inside [VS Code agent mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) for registry-aware chats.
