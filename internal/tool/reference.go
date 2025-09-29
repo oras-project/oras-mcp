@@ -18,9 +18,9 @@ package tool
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"oras.land/oras-go/v2/registry"
 )
 
 // MetadataParseReference describes the ParseReference tool.
@@ -48,34 +48,24 @@ func ParseReference(ctx context.Context, _ *mcp.CallToolRequest, input InputPars
 		return nil, OutputParseReference{}, fmt.Errorf("reference string is required")
 	}
 
-	reference := input.Reference
-	output := OutputParseReference{}
-
-	// Parse digest
-	parts := strings.Split(reference, "@")
-	if len(parts) > 1 {
-		output.Digest = parts[1]
-		reference = parts[0]
+	// parse the reference
+	ref, err := registry.ParseReference(input.Reference)
+	if err != nil {
+		return nil, OutputParseReference{}, fmt.Errorf("invalid reference string format: %w", err)
 	}
 
-	// Parse tag
-	parts = strings.Split(reference, ":")
-	if len(parts) > 1 {
-		output.Tag = parts[1]
-		reference = parts[0]
+	output := OutputParseReference{
+		Registry:   ref.Registry,
+		Repository: ref.Repository,
 	}
 
-	// Parse registry and repository
-	parts = strings.Split(reference, "/")
-	if len(parts) < 2 {
-		return nil, OutputParseReference{}, fmt.Errorf("invalid reference string format")
-	}
-
-	output.Registry = parts[0]
-	output.Repository = strings.Join(parts[1:], "/")
-
-	if output.Registry == "" || output.Repository == "" {
-		return nil, OutputParseReference{}, fmt.Errorf("invalid reference string format")
+	// set tag and digest if present
+	if ref.Reference != "" {
+		if ref.ValidateReferenceAsDigest() == nil {
+			output.Digest = ref.Reference
+		} else {
+			output.Tag = ref.Reference
+		}
 	}
 
 	return nil, output, nil

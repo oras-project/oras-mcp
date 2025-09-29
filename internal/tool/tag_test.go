@@ -17,26 +17,11 @@ package tool
 
 import (
 	"context"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"reflect"
 	"testing"
 )
-
-// getLocalhostServerURL extracts the port from a test server URL and returns a localhost URL
-func getLocalhostServerURL(serverURL string) string {
-	u, err := url.Parse(serverURL)
-	if err != nil {
-		panic("invalid server URL: " + err.Error())
-	}
-	_, port, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		panic("invalid host:port in server URL: " + err.Error())
-	}
-	return "localhost:" + port
-}
 
 func TestListTags_ValidInput(t *testing.T) {
 	// Setup a test server that simulates a registry

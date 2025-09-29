@@ -18,10 +18,10 @@ package tool
 import (
 	"context"
 	"fmt"
-	"os/exec"
-	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/oras-project/oras-mcp/internal/remote"
+	"oras.land/oras-go/v2/registry"
 )
 
 // MetadataListRepositories describes the ListRepositories tool.
@@ -42,28 +42,23 @@ type OutputListRepositories struct {
 
 // ListRepositories lists repositories of a container registry.
 func ListRepositories(ctx context.Context, _ *mcp.CallToolRequest, input InputListRepositories) (*mcp.CallToolResult, OutputListRepositories, error) {
+	// validate input
 	if input.Registry == "" {
 		return nil, OutputListRepositories{}, fmt.Errorf("registry name is required")
 	}
-
-	// list repositories using oras CLI
-	cmd := exec.CommandContext(ctx, "oras", "repo", "list", input.Registry)
-	result, err := cmd.Output()
+	reg, err := remote.NewRegistry(input.Registry)
 	if err != nil {
 		return nil, OutputListRepositories{}, err
 	}
 
-	// parse output
-	repositories := []string{}
-	for line := range strings.SplitSeq(string(result), "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			repositories = append(repositories, line)
-		}
+	// list repositories
+	repositories, err := registry.Repositories(ctx, reg)
+	if err != nil {
+		return nil, OutputListRepositories{}, err
 	}
 
 	output := OutputListRepositories{
 		Repositories: repositories,
 	}
-
 	return nil, output, nil
 }

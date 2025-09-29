@@ -19,10 +19,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/oras-project/oras-mcp/internal/remote"
+	"oras.land/oras-go/v2/content"
+	"oras.land/oras-go/v2/registry"
 )
+
+// maxBlobSize defines the maximum blob size that can be fetched.
+const maxBlobSize = 4 * 1024 * 1024 // 4 MiB
 
 // MetadataFetchBlob describes the FetchBlob tool.
 var MetadataFetchBlob = &mcp.Tool{
@@ -44,23 +49,48 @@ type OutputFetchBlob struct {
 
 // FetchBlob fetches blob referenced by a digest in a manifest.
 func FetchBlob(ctx context.Context, _ *mcp.CallToolRequest, input InputFetchBlob) (*mcp.CallToolResult, OutputFetchBlob, error) {
-	if input.Registry == "" || input.Repository == "" || input.Digest == "" {
-		return nil, OutputFetchBlob{}, fmt.Errorf("registry, repository, and digest are required")
+	// validate input
+	if input.Registry == "" {
+		return nil, OutputFetchBlob{}, fmt.Errorf("registry name is required")
 	}
+	if input.Repository == "" {
+		return nil, OutputFetchBlob{}, fmt.Errorf("repository name is required")
+	}
+	if input.Digest == "" {
+		return nil, OutputFetchBlob{}, fmt.Errorf("blob digest is required")
+	}
+	ref := registry.Reference{
+		Registry:   input.Registry,
+		Repository: input.Repository,
+		Reference:  input.Digest,
+	}
+	if err := ref.Validate(); err != nil {
+		return nil, OutputFetchBlob{}, err
+	}
+	repo := remote.NewRepository(ref)
 
-	// construct the reference string
-	reference := fmt.Sprintf("%s/%s@%s", input.Registry, input.Repository, input.Digest)
-
-	// fetch blob using oras CLI
-	cmd := exec.CommandContext(ctx, "oras", "blob", "fetch", "-o-", reference)
-	result, err := cmd.Output()
+	// fetch the blob
+	desc, rc, err := repo.Blobs().FetchReference(ctx, ref.Reference)
+	if err != nil {
+		return nil, OutputFetchBlob{}, err
+	}
+	defer rc.Close()
+	if desc.Size > maxBlobSize {
+		return nil, OutputFetchBlob{}, fmt.Errorf("blob too large: %d", desc.Size)
+	}
+	blobBytes, err := content.ReadAll(rc, desc)
 	if err != nil {
 		return nil, OutputFetchBlob{}, err
 	}
 
-	output := OutputFetchBlob{
-		Data: json.RawMessage(result),
+	// only JSON blob is returned to the agent
+	if !json.Valid(blobBytes) {
+		return nil, OutputFetchBlob{}, fmt.Errorf("non-JSON blob is unsupported")
 	}
 
+	// Create the output
+	output := OutputFetchBlob{
+		Data: json.RawMessage(blobBytes),
+	}
 	return nil, output, nil
 }

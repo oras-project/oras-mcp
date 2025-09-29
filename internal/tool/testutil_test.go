@@ -13,19 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package remote
+package tool
 
 import (
-	"oras.land/oras-go/v2/registry"
-	"oras.land/oras-go/v2/registry/remote"
+	"net"
+	"net/url"
 )
 
-// NewRepository assembles an oras-mcp remote repository.
-func NewRepository(ref registry.Reference) *remote.Repository {
-	return &remote.Repository{
-		Client:          DefaultClient,
-		Reference:       ref,
-		PlainHTTP:       isPlainHttp(ref.Registry),
-		SkipReferrersGC: true,
+// getLocalhostServerURL extracts the port from a test server URL and returns a localhost URL.
+func getLocalhostServerURL(serverURL string) string {
+	u, err := url.Parse(serverURL)
+	if err != nil {
+		panic("invalid server URL: " + err.Error())
 	}
+	_, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		panic("invalid host:port in server URL: " + err.Error())
+	}
+	return "localhost:" + port
 }
