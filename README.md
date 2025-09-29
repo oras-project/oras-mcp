@@ -32,6 +32,32 @@ Add the following code to `.vscode/mcp.json`:
 }
 ```
 
+##### Mount Docker credentials (Linux only)
+
+Linux users can share `docker login` credentials by mounting the config file:
+
+```json
+{
+    "servers": {
+        "oras-mcp-server": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "-v",
+                "${env:HOME}/.docker/config.json:/root/.docker/config.json:ro",
+                "ghcr.io/oras-project/oras-mcp:main",
+                "serve"
+            ]
+        }
+    }
+}
+```
+
+Adjust the path if you keep credentials under `${env:DOCKER_CONFIG}`. The container understands only inline `auths` entries; helper-based configs (`credsStore`, `credHelpers`) won't work. On macOS/Windows, install the [released binary](#setup-from-released-binaries) instead.
+
 ### Setup from Released Binaries
 
 1. Visit the [GitHub releases page](https://github.com/oras-project/oras-mcp/releases) and download the archive that matches your operating system and CPU architecture (`oras-mcp_<version>_<os>_<arch>.tar.gz` for Linux or macOS, `oras-mcp_<version>_windows_<arch>.zip` for Windows).
@@ -58,12 +84,10 @@ Add the following code to `.vscode/mcp.json`:
 
 ### Authentication
 
-If you need to access private registries through the server, log in ahead of time using either the ORAS CLI or Docker:
+`oras-mcp` reads credentials from the same stores used by the ORAS and Docker CLIs, but you need to expose those stores to the server process:
 
-- `oras login <registry>`
-- `docker login <registry>`
-
-The server will reuse the credentials from your local credential store when available.
+- **Released binary** – Run `oras login <registry>` or `docker login <registry>` on the host machine; the binary will pick up the cached credentials automatically.
+- **Docker container** – On Linux you can mount your Docker config as shown in the [credential section](#mount-docker-credentials-linux-only); ensure the file contains inline `auths` entries. Docker Desktop (macOS/Windows) depends on keychain helpers, so use the released binary there.
 
 ## Example Chats
 
