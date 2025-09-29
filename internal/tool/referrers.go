@@ -17,6 +17,7 @@ package tool
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -43,8 +44,11 @@ type InputListReferrers struct {
 }
 
 // OutputListReferrers is the output for the ListReferrers tool.
+//
+// MCP Go SDK rejects cyclic schemas. Referrers form a recursive tree, so we
+// pre-marshal it and inline the JSON to keep the schema acyclic.
 type OutputListReferrers struct {
-	Root *ListReferrersNode `json:",inline" jsonschema:"referrers of the requested artifact"`
+	Data json.RawMessage `json:",inline" jsonschema:"referrers of the requested artifact"`
 }
 
 type ListReferrersNode struct {
@@ -88,8 +92,13 @@ func ListReferrers(ctx context.Context, _ *mcp.CallToolRequest, input InputListR
 		return nil, OutputListReferrers{}, err
 	}
 
+	rootJSON, err := json.Marshal(root)
+	if err != nil {
+		return nil, OutputListReferrers{}, err
+	}
+
 	output := OutputListReferrers{
-		Root: root,
+		Data: json.RawMessage(rootJSON),
 	}
 	return nil, output, nil
 }

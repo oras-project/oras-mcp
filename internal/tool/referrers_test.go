@@ -84,8 +84,8 @@ func TestListReferrers_InvalidInput(t *testing.T) {
 			if result != nil {
 				t.Fatalf("expected MCP result to be nil, got %v", result)
 			}
-			if output.Root != nil {
-				t.Fatalf("expected empty output on error, got root %v", output.Root)
+			if len(output.Data) != 0 {
+				t.Fatalf("expected empty output on error, got data %s", string(output.Data))
 			}
 		})
 	}
@@ -111,8 +111,8 @@ func TestListReferrers_ResolveError(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if output.Root != nil {
-		t.Fatalf("expected empty output on error, got root %v", output.Root)
+	if len(output.Data) != 0 {
+		t.Fatalf("expected empty output on error, got data %s", string(output.Data))
 	}
 }
 
@@ -153,8 +153,8 @@ func TestListReferrers_ReferrersError(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if output.Root != nil {
-		t.Fatalf("expected empty output on error, got root %v", output.Root)
+	if len(output.Data) != 0 {
+		t.Fatalf("expected empty output on error, got data %s", string(output.Data))
 	}
 }
 
@@ -260,24 +260,29 @@ func TestListReferrers_Success(t *testing.T) {
 	if result != nil {
 		t.Fatalf("expected MCP result to be nil, got %v", result)
 	}
-	if output.Root == nil {
-		t.Fatal("expected root descriptor, got nil")
+	if len(output.Data) == 0 {
+		t.Fatal("expected referrers data, got empty message")
 	}
 
-	if output.Root.Digest != rootDigest {
-		t.Fatalf("unexpected root digest: got %s, want %s", output.Root.Digest, rootDigest)
-	}
-	if len(output.Root.Referrers) != 2 {
-		t.Fatalf("unexpected root referrers count: got %d, want 2", len(output.Root.Referrers))
-	}
-	if output.Root.Referrers[0].Digest != child1Digest {
-		t.Fatalf("unexpected first child digest: got %s, want %s", output.Root.Referrers[0].Digest, child1Digest)
-	}
-	if output.Root.Referrers[1].Digest != child2Digest {
-		t.Fatalf("unexpected second child digest: got %s, want %s", output.Root.Referrers[1].Digest, child2Digest)
+	var root ListReferrersNode
+	if err := json.Unmarshal(output.Data, &root); err != nil {
+		t.Fatalf("failed to unmarshal root: %v", err)
 	}
 
-	child1Node := output.Root.Referrers[0]
+	if root.Digest != rootDigest {
+		t.Fatalf("unexpected root digest: got %s, want %s", root.Digest, rootDigest)
+	}
+	if len(root.Referrers) != 2 {
+		t.Fatalf("unexpected root referrers count: got %d, want 2", len(root.Referrers))
+	}
+	if root.Referrers[0].Digest != child1Digest {
+		t.Fatalf("unexpected first child digest: got %s, want %s", root.Referrers[0].Digest, child1Digest)
+	}
+	if root.Referrers[1].Digest != child2Digest {
+		t.Fatalf("unexpected second child digest: got %s, want %s", root.Referrers[1].Digest, child2Digest)
+	}
+
+	child1Node := root.Referrers[0]
 	if len(child1Node.Referrers) != 1 {
 		t.Fatalf("unexpected child1 referrers count: got %d, want 1", len(child1Node.Referrers))
 	}
@@ -285,7 +290,7 @@ func TestListReferrers_Success(t *testing.T) {
 		t.Fatalf("unexpected grandchild digest: got %s, want %s", child1Node.Referrers[0].Digest, grandchildDigest)
 	}
 
-	child2Node := output.Root.Referrers[1]
+	child2Node := root.Referrers[1]
 	if len(child2Node.Referrers) != 0 {
 		t.Fatalf("unexpected child2 referrers count: got %d, want 0", len(child2Node.Referrers))
 	}
