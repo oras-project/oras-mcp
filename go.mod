@@ -7,7 +7,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v0.8.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	oras.land/oras-go/v2 v2.6.0
 )
 
