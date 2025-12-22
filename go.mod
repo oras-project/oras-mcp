@@ -3,7 +3,7 @@ module github.com/oras-project/oras-mcp
 go 1.25.0
 
 require (
-	github.com/google/jsonschema-go v0.3.0
+	github.com/google/jsonschema-go v0.4.2
 	github.com/modelcontextprotocol/go-sdk v0.8.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
