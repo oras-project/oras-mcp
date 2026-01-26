@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25.1-alpine AS builder
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.25.6-alpine AS builder
 ARG TARGETPLATFORM
 RUN apk add git make
 ENV CLI_PKG=/oras-mcp
