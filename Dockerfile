@@ -22,7 +22,7 @@ RUN mv ${CLI_PKG}/bin/${TARGETPLATFORM}/oras-mcp /go/bin/oras-mcp
 
 FROM --platform=$BUILDPLATFORM ghcr.io/oras-project/oras:v1.3.0 AS oras
 
-FROM docker.io/library/alpine:3.22.1
+FROM docker.io/library/alpine:3.23.3
 RUN apk --update add ca-certificates
 COPY --from=oras /bin/oras /bin/oras
 COPY --from=builder /go/bin/oras-mcp /bin/oras-mcp
